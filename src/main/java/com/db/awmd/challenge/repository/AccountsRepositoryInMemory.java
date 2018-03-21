@@ -2,17 +2,17 @@ package com.db.awmd.challenge.repository;
 
 import com.db.awmd.challenge.domain.Account;
 import com.db.awmd.challenge.exception.DuplicateAccountIdException;
-
-import java.math.BigDecimal;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-
 import com.db.awmd.challenge.exception.InsufficientBalanceException;
 import com.db.awmd.challenge.exception.TryLockFailException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
+
+import java.math.BigDecimal;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 
 @Repository
 @Slf4j
@@ -44,19 +44,19 @@ public class AccountsRepositoryInMemory implements AccountsRepository {
 
     @Override
     public void transferAmount(Account fromAccount, Account toAccount, BigDecimal amount) {
-        executeInLock(fromAccount, () -> executeInLock(toAccount, () -> transferAmountAsync(fromAccount,toAccount,amount)));
+        executeInLock(fromAccount.getLock(), () -> executeInLock(toAccount.getLock(), () -> transferAmountAsync(fromAccount,toAccount,amount)));
     }
 
-    private void executeInLock(Account account, Runnable command) {
+    private void executeInLock(Lock lock, Runnable command) {
         try {
-            boolean lockAcquired = account.getLock().tryLock(tryLockTimeOutInSecond, TimeUnit.SECONDS);
+            boolean lockAcquired = lock.tryLock(tryLockTimeOutInSecond, TimeUnit.SECONDS);
             if (!lockAcquired) {
                 throw new TryLockFailException("Other Transaction for same account already in Process, Please try after some time");
             }
             try {
                 command.run();
             } finally {
-                account.getLock().unlock();
+                lock.unlock();
             }
         } catch (InterruptedException e) {
             throw new TryLockFailException(e);

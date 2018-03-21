@@ -55,13 +55,6 @@ public class AccountsControllerTest {
         accountsService.getAccountsRepository().clearAccounts();
     }
 
-    @Bean
-    @Primary
-    public NotificationService notificationService() {
-        return Mockito.mock(NotificationService.class);
-    }
-
-
     @Test
     public void createAccount() throws Exception {
         this.mockMvc.perform(post("/v1/accounts").contentType(MediaType.APPLICATION_JSON)
