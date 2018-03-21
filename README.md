@@ -7,4 +7,4 @@ Money Transfer Rest Service
 3. Transfer Money between accounts
 4. Notification on money transaction
 
-For More see file [this README.pdf](README.pdf)
+For More see [README.pdf](README.pdf)
